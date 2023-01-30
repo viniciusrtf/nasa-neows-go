@@ -4,51 +4,31 @@ import (
 	"bytes"
 	"io"
 	"net/http"
-	"net/url"
 )
 
 type Client struct {
-	c           *http.Client
-	middlewares []func(http.RoundTripper) http.RoundTripper
-	cache       cache
-}
-
-type transport struct {
-	http.RoundTripper
-	query url.Values
+	c      *http.Client
+	cache  cache
+	apiKey *string
 }
 
 const defaultAPIKey = "DEMO_KEY"
 
-func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.URL.RawQuery = t.query.Encode() + "&" + req.URL.RawQuery
-	return t.RoundTripper.RoundTrip(req)
-}
-
 func NewClient(apiKey *string) *Client {
-	query := url.Values{}
-	if apiKey == nil {
-		query.Add("api_key", defaultAPIKey)
-	} else {
-		query.Add("api_key", *apiKey)
-	}
-
-	tr := &transport{http.DefaultTransport, query}
-	c := &http.Client{Transport: tr}
-
-	return &Client{c: c}
-}
-
-func (c *Client) Use(m func(http.RoundTripper) http.RoundTripper) {
-	c.middlewares = append(c.middlewares, m)
+	return &Client{c: &http.Client{}, apiKey: apiKey}
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	rt := http.DefaultTransport
-	for _, m := range c.middlewares {
-		rt = m(rt)
+	// Add the api_key query parameter to the request
+	q := req.URL.Query()
+	if q.Get("api_key") == "" {
+		if c.apiKey == nil {
+			q.Add("api_key", defaultAPIKey)
+		} else {
+			q.Add("api_key", *c.apiKey)
+		}
+		req.URL.RawQuery = q.Encode()
 	}
-	c.c.Transport = rt
 
 	// check if response is in cache (if enabled)
 	if c.cache != nil {

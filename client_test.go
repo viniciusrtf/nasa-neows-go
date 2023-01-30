@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestNewClient(t *testing.T) {
+func TestClient(t *testing.T) {
 
 	t.Run("Should fallback to defaultAPIKey in every request if no apiKey specified in NewClient", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,14 +24,22 @@ func TestNewClient(t *testing.T) {
 
 		// Make a request to the test server with a different query parameter
 		url := ts.URL + "?param=value"
-		_, err := client.c.Get(url)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			t.Error(err)
+		}
+		_, err = client.Do(req)
 		if err != nil {
 			t.Error(err)
 		}
 
 		// Make another request to the test server without any query parameters
 		url = ts.URL
-		_, err = client.c.Get(url)
+		req, err = http.NewRequest("GET", url, nil)
+		if err != nil {
+			t.Error(err)
+		}
+		_, err = client.Do(req)
 		if err != nil {
 			t.Error(err)
 		}
@@ -53,14 +61,22 @@ func TestNewClient(t *testing.T) {
 
 		// Make a request to the test server with a different query parameter
 		url := ts.URL + "?param=value"
-		_, err := client.c.Get(url)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			t.Error(err)
+		}
+		_, err = client.Do(req)
 		if err != nil {
 			t.Error(err)
 		}
 
 		// Make another request to the test server without any query parameters
 		url = ts.URL
-		_, err = client.c.Get(url)
+		req, err = http.NewRequest("GET", url, nil)
+		if err != nil {
+			t.Error(err)
+		}
+		_, err = client.Do(req)
 		if err != nil {
 			t.Error(err)
 		}
