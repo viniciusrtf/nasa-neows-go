@@ -1,6 +1,7 @@
 package neows
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -86,44 +87,44 @@ func TestFeed(t *testing.T) {
 		if feed.ElementCount != 1 {
 			failWithParseErr("element_count")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].ID != "id" {
+		if feed.NeosByDate["2021-06-01"][0].ID != "id" {
 			failWithParseErr("near_earth_objects.id")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].Name != "name" {
+		if feed.NeosByDate["2021-06-01"][0].Name != "name" {
 			failWithParseErr("near_earth_objects.name")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].NasaJplURL != "nasa_jpl_url" {
+		if feed.NeosByDate["2021-06-01"][0].NasaJplURL != "nasa_jpl_url" {
 			failWithParseErr("near_earth_objects.nasa_jpl_url")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].AbsoluteMagnitudeH != 1 {
+		if feed.NeosByDate["2021-06-01"][0].AbsoluteMagnitudeH != 1 {
 			failWithParseErr("near_earth_objects.absolute_magnitude_h")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].EstimatedDiameter.Kilometers.EstimatedDiameterMin != 1 {
+		if feed.NeosByDate["2021-06-01"][0].EstimatedDiameter.Kilometers.EstimatedDiameterMin != 1 {
 			failWithParseErr("near_earth_objects.estimated_diameter.kilometers.estimated_diameter_min")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].EstimatedDiameter.Kilometers.EstimatedDiameterMax != 1 {
+		if feed.NeosByDate["2021-06-01"][0].EstimatedDiameter.Kilometers.EstimatedDiameterMax != 1 {
 			failWithParseErr("near_earth_objects.estimated_diameter.kilometers.estimated_diameter_max")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].IsPotentiallyHazardousAsteroid != true {
+		if feed.NeosByDate["2021-06-01"][0].IsPotentiallyHazardousAsteroid != true {
 			failWithParseErr("near_earth_objects.is_potentially_hazardous_asteroid")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].CloseApproachData[0].CloseApproachDate != "2021-06-01" {
+		if feed.NeosByDate["2021-06-01"][0].CloseApproachData[0].CloseApproachDate != "2021-06-01" {
 			failWithParseErr("near_earth_objects.close_approach_data.close_approach_date")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].CloseApproachData[0].RelativeVelocity.KilometersPerSecond != "1" {
+		if feed.NeosByDate["2021-06-01"][0].CloseApproachData[0].RelativeVelocity.KilometersPerSecond != "1" {
 			failWithParseErr("near_earth_objects.close_approach_data.relative_velocity.kilometers_per_second")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].CloseApproachData[0].MissDistance.Kilometers != "1" {
+		if feed.NeosByDate["2021-06-01"][0].CloseApproachData[0].MissDistance.Kilometers != "1" {
 			failWithParseErr("near_earth_objects.close_approach_data.miss_distance.kilometers")
 		}
-		if feed.NearEarthObjects["2021-06-01"][0].CloseApproachData[0].OrbitingBody != "Earth" {
+		if feed.NeosByDate["2021-06-01"][0].CloseApproachData[0].OrbitingBody != "Earth" {
 			failWithParseErr("near_earth_objects.close_approach_data.orbiting_body")
 		}
 	})
 
 	// The following test case makes an actual call to the NASA API. It is skipped by default.
-	t.Run("TestGetFeedByDateRange", func(t *testing.T) {
-		t.Skip("Skipping actual API call")
+	t.Run("Should get a real feed by date range", func(t *testing.T) {
+		t.Skip("Skipping actual API calls")
 		client := NewClient(nil)
 		startDate, err := time.Parse("2006-01-02", "2021-06-01")
 		if err != nil {
@@ -140,8 +141,19 @@ func TestFeed(t *testing.T) {
 		if feed == nil {
 			t.Errorf("Feed should not be nil")
 		}
-		if feed.NearEarthObjects == nil {
+		if feed.NeosByDate == nil {
 			t.Errorf("NearEarthObjects should not be nil")
+		}
+
+		for date, neo := range feed.NeosByDate {
+			fmt.Printf("Asteroids approaching in %s\n", date)
+			for _, n := range neo {
+				fmt.Printf("\tName: %s\n", n.Name)
+				fmt.Printf("\tNASA JPL URL: %s\n", n.NasaJplURL)
+				fmt.Printf("\tPotentialy hazardous: %t\n", n.IsPotentiallyHazardousAsteroid)
+				fmt.Printf("\tMiss distance: %s km\n\n", n.CloseApproachData[0].MissDistance.Kilometers)
+			}
+			fmt.Printf("\n")
 		}
 	})
 

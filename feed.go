@@ -14,16 +14,16 @@ type Links struct {
 	Prev string `json:"previous"`
 }
 
-type NeoByDate map[string][]NearEarthObject
+// type NeoByDate
 
-func (n NeoByDate) Get(date time.Time) []NearEarthObject {
-	return n[date.Format("2006-01-02")]
-}
+// func (n NeoByDate) Get(date time.Time) []NearEarthObject {
+// 	return n[date.Format("2006-01-02")]
+// }
 
 type Feed struct {
-	Links            Links     `json:"links"`
-	ElementCount     int       `json:"element_count"`
-	NearEarthObjects NeoByDate `json:"near_earth_objects"`
+	Links        Links                        `json:"links"`
+	ElementCount int                          `json:"element_count"`
+	NeosByDate   map[string][]NearEarthObject `json:"near_earth_objects"`
 }
 
 type FeedService struct {
