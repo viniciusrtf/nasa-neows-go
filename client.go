@@ -2,7 +2,6 @@ package neows
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -51,29 +50,18 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	}
 	c.c.Transport = rt
 
-	fmt.Println("DOING REQUEST")
-
 	// check if response is in cache (if enabled)
 	if c.cache != nil {
-		fmt.Println("cache is enabled")
-		fmt.Println("looking for: ", req.URL.String())
-		cached, found := c.cache.get(req.URL.String())
-		fmt.Println("found: ", found)
-		fmt.Printf("cached: %s\n", cached)
 		if res, ok := c.cache.get(req.URL.String()); ok {
 			cachedRes := &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(bytes.NewBuffer(res)),
 				Header:     make(http.Header),
 			}
-			fmt.Println("HIT")
 			cachedRes.Header.Set("X-NASA-NeoWs-Go-Cache", "HIT")
 			return cachedRes, nil
 		}
-		fmt.Println("MISS")
 	}
-
-	fmt.Println("DOING REQUEST")
 
 	res, err := c.c.Do(req)
 	if err != nil {

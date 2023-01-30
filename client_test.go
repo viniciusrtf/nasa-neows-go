@@ -92,7 +92,6 @@ func TestNewClient(t *testing.T) {
 			t.Error(err)
 		}
 		resBody, err := io.ReadAll(res.Body)
-		fmt.Printf("TEST resBody1 %s of len %d\n", resBody, len(resBody))
 		defer res.Body.Close()
 		if err != nil {
 			t.Error(err)
@@ -107,7 +106,6 @@ func TestNewClient(t *testing.T) {
 			t.Error(err)
 		}
 		resBody, err = io.ReadAll(res.Body)
-		fmt.Printf("TEST resBody2 %s of len %d\n", resBody, len(resBody))
 		defer res.Body.Close()
 		if err != nil {
 			t.Error(err)
