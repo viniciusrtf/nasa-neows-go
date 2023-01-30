@@ -10,12 +10,16 @@ type Client struct {
 	c      *http.Client
 	cache  cache
 	apiKey *string
+
+	Feed *FeedService
 }
 
 const defaultAPIKey = "DEMO_KEY"
 
 func NewClient(apiKey *string) *Client {
-	return &Client{c: &http.Client{}, apiKey: apiKey}
+	c := &Client{c: &http.Client{}, apiKey: apiKey}
+	c.Feed = NewFeedService(c)
+	return c
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
@@ -49,17 +53,16 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	// Write the response to the cache (if enabled)
-	data := make([]byte, res.ContentLength)
 	if c.cache != nil {
-		data, err = io.ReadAll(res.Body)
+		data, err := io.ReadAll(res.Body)
 		if err != nil {
 			return nil, err
 		}
 		c.cache.set(req.URL.String(), data)
-	}
 
-	// Reinstate the response body
-	res.Body = io.NopCloser(bytes.NewBuffer(data))
+		// Reinstate the response body
+		res.Body = io.NopCloser(bytes.NewBuffer(data))
+	}
 
 	return res, nil
 }
