@@ -1,7 +1,7 @@
 # NASA NeoWs API Go SDK
 This is a Golang client for the [NASA NeoWs API](https://api.nasa.gov/#asteroids-neows). The API is maintained by the [SpaceRocks](https://github.com/SpaceRocks/) team (David Greenfield, Arezu Sarvestani, Jason English and Peter Baunach).
 
-I am **not** affiliated with the aforementioned groups and this is not an official initiative from them. This is also a work in progress and it is not production-ready yet.
+I am not affiliated with the aforementioned groups and this is not an official initiative from them. This is also a work in progress (WIP) and it is not production-ready.
 
 ## Usage
 
