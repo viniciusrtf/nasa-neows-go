@@ -2,7 +2,6 @@ package neows
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
