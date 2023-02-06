@@ -14,12 +14,6 @@ type Links struct {
 	Prev string `json:"previous"`
 }
 
-// type NeoByDate
-
-// func (n NeoByDate) Get(date time.Time) []NearEarthObject {
-// 	return n[date.Format("2006-01-02")]
-// }
-
 type Feed struct {
 	Links        Links                        `json:"links"`
 	ElementCount int                          `json:"element_count"`
@@ -31,6 +25,13 @@ type FeedService struct {
 	BaseURL string
 }
 
+type FeedOptions struct {
+	StartDate time.Time
+	EndDate   time.Time
+	Detailed  bool
+}
+
+// NewFeedService creates a new FeedService
 func NewFeedService(client *Client) *FeedService {
 	return &FeedService{
 		Client:  client,
@@ -38,7 +39,27 @@ func NewFeedService(client *Client) *FeedService {
 	}
 }
 
-func (s *FeedService) Fetch(startDate time.Time, endDate time.Time) (*Feed, error) {
+// NewFeedOptions creates a new FeedOptions with default values
+func NewFeedOptions() *FeedOptions {
+	return &FeedOptions{
+		StartDate: time.Now(),
+		EndDate:   time.Now().AddDate(0, 0, 7),
+		Detailed:  false,
+	}
+}
+
+// Fetch fetches approaching asteroids for the given date range
+func (s *FeedService) Fetch(opts *FeedOptions) (*Feed, error) {
+	if opts == nil {
+		opts = NewFeedOptions()
+	}
+	if opts.StartDate.IsZero() {
+		opts.StartDate = time.Now()
+	}
+	if opts.EndDate.IsZero() {
+		opts.EndDate = time.Now().AddDate(0, 0, 7)
+	}
+
 	req, err := http.NewRequest("GET", s.BaseURL, nil)
 	if err != nil {
 		return nil, err
@@ -46,8 +67,9 @@ func (s *FeedService) Fetch(startDate time.Time, endDate time.Time) (*Feed, erro
 
 	// Add query parameters
 	q := req.URL.Query()
-	q.Add("start_date", startDate.Format("2006-01-02"))
-	q.Add("end_date", endDate.Format("2006-01-02"))
+	q.Add("start_date", opts.StartDate.Format("2006-01-02"))
+	q.Add("end_date", opts.EndDate.Format("2006-01-02"))
+	q.Add("detailed", fmt.Sprintf("%t", opts.Detailed))
 	req.URL.RawQuery = q.Encode()
 
 	res, err := s.Client.Do(req)
@@ -62,14 +84,14 @@ func (s *FeedService) Fetch(startDate time.Time, endDate time.Time) (*Feed, erro
 
 	// Parse the response
 	var feed Feed
-	err = s.ParseResponse(res, &feed)
+	err = s.parseResponse(res, &feed)
 	if err != nil {
 		return nil, err
 	}
 	return &feed, nil
 }
 
-func (s *FeedService) ParseResponse(res *http.Response, feed *Feed) error {
+func (s *FeedService) parseResponse(res *http.Response, feed *Feed) error {
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err

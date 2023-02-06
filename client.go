@@ -16,12 +16,14 @@ type Client struct {
 
 const defaultAPIKey = "DEMO_KEY"
 
+// NewClient creates a new Client
 func NewClient(apiKey *string) *Client {
 	c := &Client{c: &http.Client{}, apiKey: apiKey}
 	c.Feed = NewFeedService(c)
 	return c
 }
 
+// Do executes the given HTTP request, apply default middlewares and (optionally) cache the response
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	// Add the api_key query parameter to the request
 	q := req.URL.Query()
@@ -67,18 +69,22 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
+// EnableCache enables the in-memory cache
 func (c *Client) EnableCache() {
 	c.cache = newInMemoryCache()
 }
 
+// DisableCache disables the in-memory cache
 func (c *Client) DisableCache() {
 	c.cache = nil
 }
 
+// DelCachedEntry deletes the given entry from the cache
 func (c *Client) DelCachedEntry(fullUrl string) {
 	c.cache.del(fullUrl)
 }
 
+// FlushCache flushes the cache
 func (c *Client) FlushCache() {
 	c.cache.flush()
 }
