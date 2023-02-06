@@ -41,7 +41,7 @@ func TestFeed(t *testing.T) {
 			w.Write(mockResponseBody)
 		}))
 
-		feedService := &FeedService{Client: NewClient(nil), BaseURL: ts.URL}
+		feedService := &FeedService{Client: NewClient(defaultAPIKey), BaseURL: ts.URL}
 		_, err := feedService.Fetch(nil)
 		if err != nil {
 			t.Error(err)
@@ -55,7 +55,7 @@ func TestFeed(t *testing.T) {
 		}))
 
 		// Create a mock feed service with the mock server as the base URL
-		feedService := &FeedService{Client: NewClient(nil), BaseURL: ts.URL}
+		feedService := &FeedService{Client: NewClient(defaultAPIKey), BaseURL: ts.URL}
 
 		// Sends a request to the mock server
 		_, err := feedService.Fetch(nil)
@@ -73,7 +73,7 @@ func TestFeed(t *testing.T) {
 		}))
 
 		// Create a mock feed service with the mock server as the base URL
-		feedService := &FeedService{Client: NewClient(nil), BaseURL: ts.URL}
+		feedService := &FeedService{Client: NewClient(defaultAPIKey), BaseURL: ts.URL}
 
 		// Sends a request to the mock server
 		feed, err := feedService.Fetch(nil)
@@ -136,7 +136,7 @@ func TestFeed(t *testing.T) {
 	// The following test case makes an actual call to the NASA API. It is skipped by default.
 	t.Run("Should get a real feed by date range", func(t *testing.T) {
 		t.Skip("Skipping actual API calls")
-		client := NewClient(nil)
+		client := NewClient(defaultAPIKey)
 		startDate, err := time.Parse("2006-01-02", "2021-06-01")
 		if err != nil {
 			t.Errorf("Error parsing start date: %s", err)

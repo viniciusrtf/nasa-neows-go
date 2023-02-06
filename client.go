@@ -9,15 +9,18 @@ import (
 type Client struct {
 	c      *http.Client
 	cache  cache
-	apiKey *string
+	apiKey string
 
 	Feed *FeedService
 }
 
+// defaultAPIKey is the default API key to use if none is provided. Its usage 
+// results in restrictions on the number of requests that can be made per hour.
+// Obtain your own API key at https://api.nasa.gov/index.html#apply-for-an-api-key
 const defaultAPIKey = "DEMO_KEY"
 
 // NewClient creates a new Client
-func NewClient(apiKey *string) *Client {
+func NewClient(apiKey string) *Client {
 	c := &Client{c: &http.Client{}, apiKey: apiKey}
 	c.Feed = NewFeedService(c)
 	return c
@@ -28,10 +31,10 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	// Add the api_key query parameter to the request
 	q := req.URL.Query()
 	if q.Get("api_key") == "" {
-		if c.apiKey == nil {
+		if c.apiKey == "" {
 			q.Add("api_key", defaultAPIKey)
 		} else {
-			q.Add("api_key", *c.apiKey)
+			q.Add("api_key", c.apiKey)
 		}
 		req.URL.RawQuery = q.Encode()
 	}

@@ -9,6 +9,44 @@ I am not affiliated with the aforementioned groups and this is not an official i
 go get https://github.com/viniciusrtf/nasa-neows-go
 ```
 
+Setup your client
+```go
+client := neows.NewClient("your-api-key")
+```
+
+Optionally, enable caching NeoWs API responses
+```go
+client.EnableCache()
+```
+
+Get approaching asteroids using default options (next 7 days)
+```go
+feed, err := client.Feed.Fetch(nil)
+```
+
+Get approaching asteroids with detailed orbital data
+```go
+opts := &FeedOptions{Detailed: true}
+feed, err := client.Feed.Fetch(opts)
+```
+
+Get approaching asteroids from "2021-06-01" to "2021-06-02" (YYYY-mm-dd)
+```go
+startDate, err := time.Parse("2006-01-02", "2021-06-01")
+if err != nil {
+    t.Errorf("Error parsing start date: %s", err)
+}
+
+endDate, err := time.Parse("2006-01-02", "2021-06-02")
+if err != nil {
+    t.Errorf("Error parsing end date: %s", err)
+}
+
+opts := &FeedOptions{startDate, endDate}
+feed, err := client.Feed.Fetch(opts)
+```
+
+A more complete example: Get approaching asteroids for a given date range:
 ```go
 package main
 
@@ -24,9 +62,11 @@ func main() {
     client.EnableCache() // optional
 
     // Get a feed with close approaches by date range
-    startDate := time.Now()
-    endDate := time.Now().AddDate(0, 0 ,1)
-    feed, err := client.Feed.Fetch(startDate, endDate)
+    opts := &FeedOptions{
+        StartDate: time.Now(),
+        EndDate: time.Now().AddDate(0, 0, 1)
+    }
+    feed, err := client.Feed.Fetch(opts)
     if err != nil {
         panic(err)
     }

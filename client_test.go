@@ -20,7 +20,7 @@ func TestClient(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		client := NewClient(nil)
+		client := NewClient(defaultAPIKey)
 
 		// Make a request to the test server with a different query parameter
 		url := ts.URL + "?param=value"
@@ -57,7 +57,7 @@ func TestClient(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		client := NewClient(&testAPIKey)
+		client := NewClient(testAPIKey)
 
 		// Make a request to the test server with a different query parameter
 		url := ts.URL + "?param=value"
@@ -83,7 +83,6 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("Should retrieve data from cache if cache is enabled", func(t *testing.T) {
-		testAPIKey := "abracadabra"
 		cachedData := []byte("cached data")
 
 		// Create a mock server to return cached data
@@ -93,7 +92,7 @@ func TestClient(t *testing.T) {
 		defer ts.Close()
 
 		// Enable cache
-		client := NewClient(&testAPIKey)
+		client := NewClient(defaultAPIKey)
 		client.EnableCache()
 
 		// Make a request to the mock server to cache the data
