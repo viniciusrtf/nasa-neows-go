@@ -11,7 +11,7 @@ import (
 type Links struct {
 	Self string `json:"self"`
 	Next string `json:"next"`
-	Prev string `json:"previous"`
+	Prev string `json:"prev"`
 }
 
 type Feed struct {
@@ -23,6 +23,7 @@ type Feed struct {
 type FeedService struct {
 	Client  *Client
 	BaseURL string
+	opts    *FeedOptions
 }
 
 type FeedOptions struct {
@@ -40,7 +41,7 @@ func NewFeedService(client *Client) *FeedService {
 }
 
 // NewFeedOptions creates a new FeedOptions with default values
-func NewFeedOptions() *FeedOptions {
+func NewFeedDefaultOptions() *FeedOptions {
 	return &FeedOptions{
 		StartDate: time.Now(),
 		EndDate:   time.Now().AddDate(0, 0, 7),
@@ -51,7 +52,7 @@ func NewFeedOptions() *FeedOptions {
 // Fetch fetches approaching asteroids for the given date range
 func (s *FeedService) Fetch(opts *FeedOptions) (*Feed, error) {
 	if opts == nil {
-		opts = NewFeedOptions()
+		opts = NewFeedDefaultOptions()
 	}
 	if opts.StartDate.IsZero() {
 		opts.StartDate = time.Now()
@@ -59,6 +60,10 @@ func (s *FeedService) Fetch(opts *FeedOptions) (*Feed, error) {
 	if opts.EndDate.IsZero() {
 		opts.EndDate = time.Now().AddDate(0, 0, 7)
 	}
+
+	// Carry opts over to the service, so other methods can use it
+	// like Next() and Prev()
+	s.opts = opts
 
 	req, err := http.NewRequest("GET", s.BaseURL, nil)
 	if err != nil {
@@ -72,6 +77,64 @@ func (s *FeedService) Fetch(opts *FeedOptions) (*Feed, error) {
 	q.Add("detailed", fmt.Sprintf("%t", opts.Detailed))
 	req.URL.RawQuery = q.Encode()
 
+	return s.doRequest(req)
+}
+
+// Today fetches approaching asteroids for today
+func (s *FeedService) Today() (*Feed, error) {
+	opts := NewFeedDefaultOptions()
+	opts.EndDate = time.Now()
+
+	if s.opts != nil {
+		opts.Detailed = s.opts.Detailed
+	}
+
+	return s.Fetch(opts)
+}
+
+// Next fetches the next page of the given Feed
+func (s *FeedService) Next(current *Feed) (*Feed, error) {
+	// Last page was reached
+	if current.Links.Next == "" {
+		return nil, nil
+	}
+
+	req, err := http.NewRequest("GET", current.Links.Next, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.opts != nil {
+		q := req.URL.Query()
+		q.Add("detailed", fmt.Sprintf("%t", s.opts.Detailed))
+		req.URL.RawQuery = q.Encode()
+	}
+
+	return s.doRequest(req)
+}
+
+// Prev fetches the previous page of the given Feed
+func (s *FeedService) Prev(current *Feed) (*Feed, error) {
+	// This is the first page
+	if current.Links.Prev == "" {
+		return nil, nil
+	}
+
+	req, err := http.NewRequest("GET", current.Links.Prev, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.opts != nil {
+		q := req.URL.Query()
+		q.Add("detailed", fmt.Sprintf("%t", s.opts.Detailed))
+		req.URL.RawQuery = q.Encode()
+	}
+	
+	return s.doRequest(req)
+}
+
+func (s *FeedService) doRequest(req *http.Request) (*Feed, error) {
 	res, err := s.Client.Do(req)
 	if err != nil {
 		return nil, err
