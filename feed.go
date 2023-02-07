@@ -27,43 +27,33 @@ type FeedService struct {
 }
 
 type FeedOptions struct {
-	StartDate time.Time
-	EndDate   time.Time
-	Detailed  bool
+	Detailed bool
 }
 
 // NewFeedService creates a new FeedService
-func NewFeedService(client *Client) *FeedService {
+func NewFeedService(client *Client, opts *FeedOptions) *FeedService {
 	return &FeedService{
 		Client:  client,
 		BaseURL: "https://api.nasa.gov/neo/rest/v1/feed",
+		opts:    opts,
 	}
 }
 
-// NewFeedOptions creates a new FeedOptions with default values
-func NewFeedDefaultOptions() *FeedOptions {
+// NewDefaultFeedOptions creates a new FeedOptions with default values
+func NewDefaultFeedOptions() *FeedOptions {
 	return &FeedOptions{
-		StartDate: time.Now(),
-		EndDate:   time.Now().AddDate(0, 0, 7),
-		Detailed:  false,
+		Detailed: false,
 	}
 }
 
 // Fetch fetches approaching asteroids for the given date range
-func (s *FeedService) Fetch(opts *FeedOptions) (*Feed, error) {
-	if opts == nil {
-		opts = NewFeedDefaultOptions()
+func (s *FeedService) Fetch(start time.Time, end time.Time) (*Feed, error) {
+	if start.IsZero() {
+		start = time.Now()
 	}
-	if opts.StartDate.IsZero() {
-		opts.StartDate = time.Now()
+	if end.IsZero() {
+		end = start.AddDate(0, 0, 7)
 	}
-	if opts.EndDate.IsZero() {
-		opts.EndDate = time.Now().AddDate(0, 0, 7)
-	}
-
-	// Carry opts over to the service, so other methods can use it
-	// like Next() and Prev()
-	s.opts = opts
 
 	req, err := http.NewRequest("GET", s.BaseURL, nil)
 	if err != nil {
@@ -72,9 +62,8 @@ func (s *FeedService) Fetch(opts *FeedOptions) (*Feed, error) {
 
 	// Add query parameters
 	q := req.URL.Query()
-	q.Add("start_date", opts.StartDate.Format("2006-01-02"))
-	q.Add("end_date", opts.EndDate.Format("2006-01-02"))
-	q.Add("detailed", fmt.Sprintf("%t", opts.Detailed))
+	q.Add("start_date", start.Format("2006-01-02"))
+	q.Add("end_date", end.Format("2006-01-02"))
 	req.URL.RawQuery = q.Encode()
 
 	return s.doRequest(req)
@@ -82,14 +71,7 @@ func (s *FeedService) Fetch(opts *FeedOptions) (*Feed, error) {
 
 // Today fetches approaching asteroids for today
 func (s *FeedService) Today() (*Feed, error) {
-	opts := NewFeedDefaultOptions()
-	opts.EndDate = time.Now()
-
-	if s.opts != nil {
-		opts.Detailed = s.opts.Detailed
-	}
-
-	return s.Fetch(opts)
+	return s.Fetch(time.Now(), time.Now())
 }
 
 // Next fetches the next page of the given Feed
@@ -102,12 +84,6 @@ func (s *FeedService) Next(current *Feed) (*Feed, error) {
 	req, err := http.NewRequest("GET", current.Links.Next, nil)
 	if err != nil {
 		return nil, err
-	}
-
-	if s.opts != nil {
-		q := req.URL.Query()
-		q.Add("detailed", fmt.Sprintf("%t", s.opts.Detailed))
-		req.URL.RawQuery = q.Encode()
 	}
 
 	return s.doRequest(req)
@@ -125,16 +101,17 @@ func (s *FeedService) Prev(current *Feed) (*Feed, error) {
 		return nil, err
 	}
 
-	if s.opts != nil {
-		q := req.URL.Query()
-		q.Add("detailed", fmt.Sprintf("%t", s.opts.Detailed))
-		req.URL.RawQuery = q.Encode()
-	}
-	
 	return s.doRequest(req)
 }
 
 func (s *FeedService) doRequest(req *http.Request) (*Feed, error) {
+	// Add optional params
+	q := req.URL.Query()
+	if s.opts != nil {
+		q.Add("detailed", fmt.Sprintf("%t", s.opts.Detailed))
+	}
+	req.URL.RawQuery = q.Encode()
+
 	res, err := s.Client.Do(req)
 	if err != nil {
 		return nil, err

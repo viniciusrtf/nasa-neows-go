@@ -16,19 +16,7 @@ func TestFeed(t *testing.T) {
 	t.Run("Should use the default options if none are provided", func(t *testing.T) {
 		// Create a mock server that checks if the default options are set
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defaultOpts := NewFeedDefaultOptions()
-
-			startDate := r.URL.Query().Get("start_date")
-			dStartDate := defaultOpts.StartDate.Format("2006-01-02")
-			if startDate != dStartDate {
-				t.Errorf("expected %s, got %s", time.Now().Format("2006-01-02"), startDate)
-			}
-
-			endDate := r.URL.Query().Get("end_date")
-			dEndDate := defaultOpts.EndDate.Format("2006-01-02")
-			if endDate != dEndDate {
-				t.Errorf("expected %s, got %s", time.Now().AddDate(0, 0, 7).Format("2006-01-02"), endDate)
-			}
+			defaultOpts := NewDefaultFeedOptions()
 
 			detailed := r.URL.Query().Get("detailed")
 			dDetailed := fmt.Sprintf("%t", defaultOpts.Detailed)
@@ -41,14 +29,14 @@ func TestFeed(t *testing.T) {
 			w.Write(mockResponseBody)
 		}))
 
-		feedService := &FeedService{Client: NewClient(defaultAPIKey), BaseURL: ts.URL}
-		_, err := feedService.Fetch(nil)
+		feedService := &FeedService{Client: NewClient(defaultAPIKey), BaseURL: ts.URL, opts: NewDefaultFeedOptions()}
+		_, err := feedService.Fetch(time.Now(), time.Now())
 		if err != nil {
 			t.Error(err)
 		}
 	})
 
-	t.Run("Should return an error if the response is not 200", func(t *testing.T) {
+	t.Run("Should return an error if the HTTP status code is not 200", func(t *testing.T) {
 		// Create a mock server that returns a 500 status code
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -58,7 +46,7 @@ func TestFeed(t *testing.T) {
 		feedService := &FeedService{Client: NewClient(defaultAPIKey), BaseURL: ts.URL}
 
 		// Sends a request to the mock server
-		_, err := feedService.Fetch(nil)
+		_, err := feedService.Fetch(time.Now(), time.Now())
 		if err == nil {
 			t.Error("Should return an error")
 		}
@@ -76,7 +64,7 @@ func TestFeed(t *testing.T) {
 		feedService := &FeedService{Client: NewClient(defaultAPIKey), BaseURL: ts.URL}
 
 		// Sends a request to the mock server
-		feed, err := feedService.Fetch(nil)
+		feed, err := feedService.Fetch(time.Now(), time.Now())
 		if err != nil {
 			t.Error(err)
 		}
@@ -134,27 +122,24 @@ func TestFeed(t *testing.T) {
 	})
 
 	// The following test cases makes actual call to the NASA API. They're
-	// skipped by default because they can fail due to network issues or API 
+	// skipped by default because they can fail due to network issues or API
 	// changes. To run them, remove the t.Skip() call.
 
 	t.Run("Should get a real feed by date range", func(t *testing.T) {
 		t.Skip("Skipping actual API calls")
 		client := NewClient(defaultAPIKey)
-		startDate, err := time.Parse("2006-01-02", "2021-06-01")
+		fs := NewFeedService(client, &FeedOptions{Detailed: true})		
+		
+		start, err := time.Parse("2006-01-02", "2021-06-01")
 		if err != nil {
 			t.Errorf("Error parsing start date: %s", err)
 		}
-		endDate, err := time.Parse("2006-01-02", "2021-06-02")
+		end, err := time.Parse("2006-01-02", "2021-06-07")
 		if err != nil {
 			t.Errorf("Error parsing end date: %s", err)
 		}
 
-		opts := &FeedOptions{
-			StartDate: startDate,
-			EndDate:   endDate,
-			Detailed:  true,
-		}
-		feed, err := client.Feed.Fetch(opts)
+		feed, err := fs.Fetch(start, end)
 		if err != nil {
 			t.Errorf("Error fetching feed: %s", err)
 		}

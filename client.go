@@ -22,7 +22,7 @@ const defaultAPIKey = "DEMO_KEY"
 // NewClient creates a new Client
 func NewClient(apiKey string) *Client {
 	c := &Client{c: &http.Client{}, apiKey: apiKey}
-	c.Feed = NewFeedService(c)
+	c.Feed = NewFeedService(c, NewDefaultFeedOptions())
 	return c
 }
 
