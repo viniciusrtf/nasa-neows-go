@@ -19,31 +19,30 @@ Optionally, enable caching NeoWs API responses
 client.EnableCache()
 ```
 
-Get approaching asteroids using default options (next 7 days)
+Get approaching asteroids for the next 7 days
 ```go
-feed, err := client.Feed.Fetch(nil)
+feed, err := client.Feed.Fetch(time.Now(), time.Now().AddDate(0, 0, 7))
 ```
 
-Get approaching asteroids with detailed orbital data
+Get today's approaching asteroids
 ```go
-opts := &FeedOptions{Detailed: true}
-feed, err := client.Feed.Fetch(opts)
+feed, err := client.Feed.Today()
 ```
 
-Get approaching asteroids from "2021-06-01" to "2021-06-02" (YYYY-mm-dd)
+Get **detailed** information about approaching asteroids from "2021-06-01" to "2021-06-02" (YYYY-mm-dd)
 ```go
-startDate, err := time.Parse("2006-01-02", "2021-06-01")
+start, err := time.Parse("2006-01-02", "2021-06-01")
 if err != nil {
     t.Errorf("Error parsing start date: %s", err)
 }
 
-endDate, err := time.Parse("2006-01-02", "2021-06-02")
+end, err := time.Parse("2006-01-02", "2021-06-02")
 if err != nil {
     t.Errorf("Error parsing end date: %s", err)
 }
 
-opts := &FeedOptions{startDate, endDate}
-feed, err := client.Feed.Fetch(opts)
+fs := NewFeedService(client, &FeedOptions{Detailed: true})
+feed, err := fs.Fetch(start, end)
 ```
 
 A more complete example: Get approaching asteroids for a given date range:
@@ -62,11 +61,17 @@ func main() {
     client.EnableCache() // optional
 
     // Get a feed with close approaches by date range
-    opts := &FeedOptions{
-        StartDate: time.Now(),
-        EndDate: time.Now().AddDate(0, 0, 1)
+    start, err := time.Parse("2006-01-02", "2021-06-01")
+    if err != nil {
+        t.Errorf("Error parsing start date: %s", err)
     }
-    feed, err := client.Feed.Fetch(opts)
+
+    end, err := time.Parse("2006-01-02", "2021-06-02")
+    if err != nil {
+        t.Errorf("Error parsing end date: %s", err)
+    }
+
+    feed, err := client.Feed.Fetch()
     if err != nil {
         panic(err)
     }
