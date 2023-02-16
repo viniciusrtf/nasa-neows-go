@@ -36,6 +36,19 @@ func TestFeed(t *testing.T) {
 		}
 	})
 
+	t.Run("Should return an error if date range is invalid", func(t *testing.T) {
+		feedService := NewFeedService(NewClient(defaultAPIKey), nil)
+		_, err := feedService.Fetch(time.Now(), time.Now().AddDate(0, 0, -1))
+		if err == nil {
+			t.Error("expected error to be returned for start date > end date, got nil")
+		}
+
+		_, err = feedService.Fetch(time.Now(), time.Now().AddDate(0, 0, 8))
+		if err == nil {
+			t.Error("expected error to be returned for date range > 7 days, got nil")
+		}
+	})
+
 	t.Run("Should return an error if the HTTP status code is not 200", func(t *testing.T) {
 		// Create a mock server that returns a 500 status code
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

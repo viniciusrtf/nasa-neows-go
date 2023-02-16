@@ -46,13 +46,20 @@ func NewDefaultFeedOptions() *FeedOptions {
 	}
 }
 
-// Fetch fetches approaching asteroids for the given date range
+// Fetch fetches approaching asteroids for the given date range, Max range is
+// 7 days
 func (s *FeedService) Fetch(start time.Time, end time.Time) (*Feed, error) {
 	if start.IsZero() {
 		start = time.Now()
 	}
 	if end.IsZero() {
 		end = start.AddDate(0, 0, 7)
+	}
+	if start.After(end) {
+		return nil, fmt.Errorf("start date must be before end date")
+	}
+	if end.Sub(start) > 7*24*time.Hour {
+		return nil, fmt.Errorf("max date range is 7 days")
 	}
 
 	req, err := http.NewRequest("GET", s.BaseURL, nil)
