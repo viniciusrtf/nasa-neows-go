@@ -46,7 +46,7 @@ func NewDefaultFeedOptions() *FeedOptions {
 	}
 }
 
-// Fetch fetches approaching asteroids for the given date range, Max range is
+// Fetch fetches approaching asteroids for the given date range. Max range is
 // 7 days
 func (s *FeedService) Fetch(start time.Time, end time.Time) (*Feed, error) {
 	if start.IsZero() {

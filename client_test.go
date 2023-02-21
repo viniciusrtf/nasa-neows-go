@@ -20,7 +20,7 @@ func TestClient(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		client := NewClient(defaultAPIKey)
+		client := NewClient("")
 
 		// Make a request to the test server with a different query parameter
 		url := ts.URL + "?param=value"

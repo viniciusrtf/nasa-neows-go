@@ -13,7 +13,7 @@ type Client struct {
 
 	Feed *FeedService
 }
-
+ 
 // defaultAPIKey is the default API key to use if none is provided. Its usage 
 // results in restrictions on the number of requests that can be made per hour.
 // Obtain your own API key at https://api.nasa.gov/index.html#apply-for-an-api-key
