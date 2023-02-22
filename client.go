@@ -12,6 +12,7 @@ type Client struct {
 	apiKey string
 
 	Feed *FeedService
+	Lookup *LookupService
 }
  
 // defaultAPIKey is the default API key to use if none is provided. Its usage 
@@ -23,6 +24,7 @@ const defaultAPIKey = "DEMO_KEY"
 func NewClient(apiKey string) *Client {
 	c := &Client{c: &http.Client{}, apiKey: apiKey}
 	c.Feed = NewFeedService(c, NewDefaultFeedOptions())
+	c.Lookup = NewLookupService(c)
 	return c
 }
 

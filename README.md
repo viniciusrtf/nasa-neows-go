@@ -19,6 +19,11 @@ Optionally, enable caching NeoWs API responses
 client.EnableCache()
 ```
 
+Lookup an asteroid by its SPKID or Asteroid Name
+```go
+neo, err := client.Lookup.Find("2023 BU")
+```
+
 Get approaching asteroids for the next 7 days
 ```go
 feed, err := client.Feed.Fetch(time.Now(), time.Now().AddDate(0, 0, 7))
